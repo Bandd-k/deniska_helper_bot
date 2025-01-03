@@ -21,19 +21,19 @@ OPENAI_COMPLETION_OPTIONS = {
 
 
 class ChatGPT:
-    def __init__(self, model="gpt-3.5-turbo"):
-        assert model in config.chat_modes.keys(), f"Unknown model: {model}"
+    def __init__(self, model="gpt-4o"):
+        assert model in {"gpt-3.5-turbo-16k", "gpt-4", "gpt-4o", "gpt-4-turbo-preview", "gpt-4-vision-preview"}, f"Unknown model: {model}"
         self.model = model
 
     async def send_message(self, message, dialog_messages=[], chat_mode="assistant"):
-        if chat_mode not in config.models.keys():
+        if chat_mode not in config.chat_modes.keys():
             raise ValueError(f"Chat mode {chat_mode} is not supported")
 
         n_dialog_messages_before = len(dialog_messages)
         answer = None
         while answer is None:
             try:
-                if self.model in config.models.keys():
+                if self.model in {"gpt-3.5-turbo-16k", "gpt-4", "gpt-4o", "gpt-4-turbo-preview", "gpt-4-vision-preview"}:
                     messages = self._generate_prompt_messages(message, dialog_messages, chat_mode)
                     r = await openai.ChatCompletion.acreate(
                         model=self.model,
@@ -65,7 +65,7 @@ class ChatGPT:
         answer = None
         while answer is None:
             try:
-                if self.model in config.models.keys():
+                if self.model in {"gpt-3.5-turbo-16k", "gpt-4", "gpt-4o", "gpt-4-turbo-preview", "gpt-4-vision-preview"}:
                     messages = self._generate_prompt_messages(message, dialog_messages, chat_mode)
                     r_gen = await openai.ChatCompletion.acreate(
                         model=self.model,
@@ -132,13 +132,7 @@ class ChatGPT:
         if model == "gpt-3.5-turbo-16k":
             tokens_per_message = 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n
             tokens_per_name = -1  # if there's a name, the role is omitted
-        elif model == "gpt-3.5-turbo":
-            tokens_per_message = 4
-            tokens_per_name = -1
         elif model == "gpt-4":
-            tokens_per_message = 3
-            tokens_per_name = 1
-        elif model == "gpt-4-1106-preview":
             tokens_per_message = 3
             tokens_per_name = 1
         elif model == "gpt-4-turbo-preview":
