@@ -1,11 +1,13 @@
 import config
 import openai
+from openai import AsyncOpenAI
 
 
-# setup openai
-openai.api_key = config.openai_api_key
-if config.openai_api_base is not None:
-    openai.api_base = config.openai_api_base
+# setup openai client
+client = AsyncOpenAI(
+    api_key=config.openai_api_key,
+    base_url=config.openai_api_base if config.openai_api_base else None,
+)
 
 
 OPENAI_COMPLETION_OPTIONS = {
@@ -14,8 +16,10 @@ OPENAI_COMPLETION_OPTIONS = {
     "top_p": 1,
     "frequency_penalty": 0,
     "presence_penalty": 0,
-    "request_timeout": 150.0,
+    "timeout": 150.0,
 }
+
+no_system_message_models = ["o1-mini", "o1"]
 
 
 class ChatGPT:
@@ -41,10 +45,10 @@ class ChatGPT:
                     messages = self._generate_prompt_messages(
                         message, dialog_messages, chat_mode
                     )
-                    r = await openai.ChatCompletion.acreate(
+                    r = await client.chat.completions.create(
                         model=self.model, messages=messages, **OPENAI_COMPLETION_OPTIONS
                     )
-                    answer = r.choices[0].message["content"]
+                    answer = r.choices[0].message.content
                 else:
                     raise ValueError(f"Unknown model: {self.model}")
 
@@ -53,7 +57,7 @@ class ChatGPT:
                     r.usage.prompt_tokens,
                     r.usage.completion_tokens,
                 )
-            except openai.error.InvalidRequestError as e:  # too many tokens
+            except openai.BadRequestError as e:  # too many tokens
                 if len(dialog_messages) == 0:
                     raise ValueError(
                         "Dialog messages is reduced to zero, but still has too many tokens to make completion"
@@ -73,9 +77,13 @@ class ChatGPT:
         )
 
     def _generate_prompt_messages(self, message, dialog_messages, chat_mode):
-        prompt = config.chat_modes[chat_mode]["prompt_start"]
+        messages = []
 
-        messages = [{"role": "system", "content": prompt}]
+        # Only add system message if model allows it
+        if self.model not in no_system_message_models:
+            prompt = config.chat_modes[chat_mode]["prompt_start"]
+            messages.append({"role": "system", "content": prompt})
+
         for dialog_message in dialog_messages:
             messages.append({"role": "user", "content": dialog_message["user"]})
             messages.append({"role": "assistant", "content": dialog_message["bot"]})
@@ -89,16 +97,16 @@ class ChatGPT:
 
 
 async def transcribe_audio(audio_file) -> str:
-    r = await openai.Audio.atranscribe("whisper-1", audio_file)
-    return r["text"] or ""
+    r = await client.audio.transcriptions.create(model="whisper-1", file=audio_file)
+    return r.text or ""
 
 
 async def generate_images(prompt, n_images=4, size="512x512"):
-    r = await openai.Image.acreate(prompt=prompt, n=n_images, size=size)
+    r = await client.images.generate(prompt=prompt, n=n_images, size=size)
     image_urls = [item.url for item in r.data]
     return image_urls
 
 
 async def is_content_acceptable(prompt):
-    r = await openai.Moderation.acreate(input=prompt)
+    r = await client.moderations.create(input=prompt)
     return not all(r.results[0].categories.values())

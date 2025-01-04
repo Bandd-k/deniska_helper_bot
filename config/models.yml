@@ -1,5 +1,5 @@
-available_text_models: ["gpt-4o-mini", "gpt-4o", "o1-mini"]
-available_premium_models: ["o1"]
+available_text_models: ["gpt-4o-mini", "gpt-4o"]
+available_premium_models: ["o1-mini", "o1"]
 info:
 
   gpt-4o-mini:
