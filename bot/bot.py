@@ -602,7 +602,14 @@ def get_settings_menu(user_id: int):
 
     # buttons to choose models
     buttons = []
-    for model_key in config.models["available_text_models"]:
+    models_list = config.models["available_text_models"]
+
+    # Add premium models if user is premium
+    username = db.get_user_attribute(user_id, "username")
+    if username in config.premium_usernames:
+        models_list = models_list + config.models["available_premium_models"]
+
+    for model_key in models_list:
         title = config.models["info"][model_key]["name"]
         if model_key == current_model:
             title = "✅ " + title

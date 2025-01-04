@@ -1,4 +1,5 @@
 available_text_models: ["gpt-4o-mini", "gpt-4o", "o1-mini"]
+available_premium_models: ["o1"]
 info:
 
   gpt-4o-mini:
@@ -39,6 +40,19 @@ info:
       smart: 5
       fast: 3
       cheap: 1
+
+  o1:
+    type: chat_completion
+    name: o1
+    description: o1 is <b>extremely expensive</b>
+
+    price_per_1000_input_tokens: 0.0030
+    price_per_1000_output_tokens: 0.0120
+
+    scores:
+      smart: 5
+      fast: 1
+      cheap: 0
 
   dalle-2:
      type: image

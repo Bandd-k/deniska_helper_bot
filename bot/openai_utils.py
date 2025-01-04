@@ -22,6 +22,7 @@ class ChatGPT:
     def __init__(self, model="gpt-4o"):
         assert (
             model in config.models["available_text_models"]
+            or model in config.models["available_premium_models"]
         ), f"Unknown model: {model}. Use settings to choose new one"
         self.model = model
 
@@ -33,7 +34,10 @@ class ChatGPT:
         answer = None
         while answer is None:
             try:
-                if self.model in config.models["available_text_models"]:
+                if (
+                    self.model in config.models["available_text_models"]
+                    or self.model in config.models["available_premium_models"]
+                ):
                     messages = self._generate_prompt_messages(
                         message, dialog_messages, chat_mode
                     )
