@@ -12,12 +12,12 @@ info:
     scores:
       smart: 3
       fast: 5
-      cheap: 1
+      cheap: 5
 
   gpt-4o:
     type: chat_completion
     name: GPT-4o
-    description: GPT-4o is a <b>best balance</b> speed, smart, cheap.
+    description: GPT-4o is the <b>best balance</b> speed, smart, cheap.
 
     price_per_1000_input_tokens: 0.00250
     price_per_1000_output_tokens: 0.01000
@@ -30,7 +30,7 @@ info:
   o1-mini:
     type: chat_completion
     name: o1-mini
-    description: o1-mini is expensive and slow, but the smartest model
+    description: o1-mini is <b>expensive and slow</b>, but the smartest model
 
     price_per_1000_input_tokens: 0.0030
     price_per_1000_output_tokens: 0.0120

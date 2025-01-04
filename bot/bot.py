@@ -260,9 +260,6 @@ async def message_handle(
         current_model = db.get_user_attribute(user_id, "current_model")
 
         try:
-            # send placeholder message to user
-            placeholder_message = await update.message.reply_text("...")
-
             # send typing action
             await update.message.chat.send_action(action="typing")
 
@@ -279,62 +276,20 @@ async def message_handle(
             ]
 
             chatgpt_instance = openai_utils.ChatGPT(model=current_model)
-            if config.enable_message_streaming:
-                gen = chatgpt_instance.send_message_stream(
-                    _message, dialog_messages=dialog_messages, chat_mode=chat_mode
-                )
-            else:
-                (
-                    answer,
-                    (n_input_tokens, n_output_tokens),
-                    n_first_dialog_messages_removed,
-                ) = await chatgpt_instance.send_message(
-                    _message, dialog_messages=dialog_messages, chat_mode=chat_mode
-                )
+            (
+                answer,
+                (n_input_tokens, n_output_tokens),
+                n_first_dialog_messages_removed,
+            ) = await chatgpt_instance.send_message(
+                _message, dialog_messages=dialog_messages, chat_mode=chat_mode
+            )
 
-                async def fake_gen():
-                    yield "finished", answer, (
-                        n_input_tokens,
-                        n_output_tokens,
-                    ), n_first_dialog_messages_removed
+            answer = answer[:4096]  # telegram message limit
 
-                gen = fake_gen()
-
-            prev_answer = ""
-            async for gen_item in gen:
-                (
-                    status,
-                    answer,
-                    (n_input_tokens, n_output_tokens),
-                    n_first_dialog_messages_removed,
-                ) = gen_item
-
-                answer = answer[:4096]  # telegram message limit
-
-                # update only when 100 new symbols are ready
-                if abs(len(answer) - len(prev_answer)) < 100 and status != "finished":
-                    continue
-
-                try:
-                    await context.bot.edit_message_text(
-                        answer,
-                        chat_id=placeholder_message.chat_id,
-                        message_id=placeholder_message.message_id,
-                        parse_mode=parse_mode,
-                    )
-                except telegram.error.BadRequest as e:
-                    if str(e).startswith("Message is not modified"):
-                        continue
-                    else:
-                        await context.bot.edit_message_text(
-                            answer,
-                            chat_id=placeholder_message.chat_id,
-                            message_id=placeholder_message.message_id,
-                        )
-
-                await asyncio.sleep(0.01)  # wait a bit to avoid flooding
-
-                prev_answer = answer
+            try:
+                await update.message.reply_text(answer, parse_mode=parse_mode)
+            except telegram.error.BadRequest:
+                await update.message.reply_text(answer)
 
             # update user data
             new_dialog_message = {
