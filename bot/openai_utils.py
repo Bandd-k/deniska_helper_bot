@@ -9,16 +9,6 @@ client = AsyncOpenAI(
     base_url=config.openai_api_base if config.openai_api_base else None,
 )
 
-
-OPENAI_COMPLETION_OPTIONS = {
-    "temperature": 0.7,
-    "max_tokens": 2096,
-    "top_p": 1,
-    "frequency_penalty": 0,
-    "presence_penalty": 0,
-    "timeout": 150.0,
-}
-
 no_system_message_models = ["o1-mini", "o1"]
 
 
@@ -35,6 +25,25 @@ class ChatGPT:
             raise ValueError(f"Chat mode {chat_mode} is not supported")
 
         n_dialog_messages_before = len(dialog_messages)
+
+        if self.model not in no_system_message_models:
+            OPENAI_COMPLETION_OPTIONS = {
+                "temperature": 0.7,
+                "max_tokens": 2096,
+                "top_p": 1,
+                "frequency_penalty": 0,
+                "presence_penalty": 0,
+                "timeout": 150.0,
+            }
+        else:
+            OPENAI_COMPLETION_OPTIONS = {
+                "max_completion_tokens": 4096,
+                "top_p": 1,
+                "frequency_penalty": 0,
+                "presence_penalty": 0,
+                "timeout": 150.0,
+            }
+
         answer = None
         while answer is None:
             try:
@@ -59,9 +68,7 @@ class ChatGPT:
                 )
             except openai.BadRequestError as e:  # too many tokens
                 if len(dialog_messages) == 0:
-                    raise ValueError(
-                        "Dialog messages is reduced to zero, but still has too many tokens to make completion"
-                    ) from e
+                    raise e
 
                 # forget first message in dialog_messages
                 dialog_messages = dialog_messages[1:]
