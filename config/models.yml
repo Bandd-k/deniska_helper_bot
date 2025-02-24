@@ -1,5 +1,6 @@
-available_text_models: ["gpt-4o-mini", "gpt-4o"]
-available_premium_models: ["o1-mini", "o1"]
+available_text_models: ["gpt-4o-mini", "gpt-4o", "o1-mini"]
+available_premium_models: ["o1", "o3-mini"]
+reasoning_models: ["o1-mini", "o1", "o3-mini"]
 info:
 
   gpt-4o-mini:
@@ -33,11 +34,24 @@ info:
     name: o1-mini
     description: o1-mini is <b>expensive and slow</b>, but the smartest model
 
-    price_per_1000_input_tokens: 0.0030
-    price_per_1000_output_tokens: 0.0120
+    price_per_1000_input_tokens: 0.00110
+    price_per_1000_output_tokens: 0.00440
 
     scores:
-      smart: 5
+      smart: 4
+      fast: 3
+      cheap: 1
+
+  o3-mini:
+    type: chat_completion
+    name: o3-mini
+    description: o3-mini is <b>expensive</b>, but the smartest model
+
+    price_per_1000_input_tokens: 0.00110
+    price_per_1000_output_tokens: 0.00440
+
+    scores:
+      smart: 4
       fast: 3
       cheap: 1
 
@@ -46,8 +60,8 @@ info:
     name: o1
     description: o1 is <b>extremely expensive</b>
 
-    price_per_1000_input_tokens: 0.0030
-    price_per_1000_output_tokens: 0.0120
+    price_per_1000_input_tokens: 0.0150
+    price_per_1000_output_tokens: 0.0600
 
     scores:
       smart: 5

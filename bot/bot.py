@@ -103,6 +103,9 @@ async def force_channel_subscription_if_needed(
     update: Update, context: CallbackContext
 ) -> bool:
     if not await check_channel_subscription(update, context):
+        username = update.effective_user.username
+        if username in config.no_sub_usernames:
+            return True
         await unauthorized_handler(update, context)
         return False
     return True
@@ -270,9 +273,13 @@ async def message_handle(
                 return
 
             dialog_messages = db.get_dialog_messages(user_id, dialog_id=None)
-            parse_mode = {"html": ParseMode.HTML, "markdown": ParseMode.MARKDOWN}[
-                config.chat_modes[chat_mode]["parse_mode"]
-            ]
+            parse_mode = (
+                ParseMode.MARKDOWN
+                if current_model in config.models["reasoning_models"]
+                else {"html": ParseMode.HTML, "markdown": ParseMode.MARKDOWN}[
+                    config.chat_modes[chat_mode]["parse_mode"]
+                ]
+            )
 
             chatgpt_instance = openai_utils.ChatGPT(model=current_model)
             (

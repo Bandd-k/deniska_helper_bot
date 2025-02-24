@@ -9,7 +9,7 @@ client = AsyncOpenAI(
     base_url=config.openai_api_base if config.openai_api_base else None,
 )
 
-no_system_message_models = ["o1-mini", "o1"]
+no_system_message_models = ["o1-mini", "o1", "o3-mini"]
 
 
 class ChatGPT:
