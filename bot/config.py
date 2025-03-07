@@ -17,6 +17,7 @@ openai_api_key = config_yaml["openai_api_key"]
 openai_api_base = config_yaml.get("openai_api_base", None)
 allowed_telegram_usernames = config_yaml["allowed_telegram_usernames"]
 premium_usernames = config_yaml["premium_usernames"]
+no_sub_usernames = config_yaml["no_sub_usernames"]
 new_dialog_timeout = config_yaml["new_dialog_timeout"]
 return_n_generated_images = config_yaml.get("return_n_generated_images", 1)
 image_size = config_yaml.get("image_size", "512x512")
