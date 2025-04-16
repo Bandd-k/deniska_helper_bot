@@ -208,6 +208,14 @@ async def retry_handle(update: Update, context: CallbackContext):
     )
 
 
+def get_current_model(user_id):
+    current_model = db.get_user_attribute(user_id, "current_model")
+    if current_model not in config.models["info"]:
+        current_model = config.models["available_text_models"][0]
+        db.set_user_attribute(user_id, "current_model", current_model)
+    return current_model
+
+
 async def message_handle(
     update: Update, context: CallbackContext, message=None, use_new_dialog_timeout=True
 ):
@@ -259,7 +267,9 @@ async def message_handle(
 
         # in case of CancelledError
         n_input_tokens, n_output_tokens = 0, 0
-        current_model = db.get_user_attribute(user_id, "current_model")
+
+        # SET DEFAULT
+        current_model = get_current_model(user_id)
 
         try:
             # send typing action
@@ -597,7 +607,7 @@ async def set_chat_mode_handle(update: Update, context: CallbackContext):
 
 
 def get_settings_menu(user_id: int):
-    current_model = db.get_user_attribute(user_id, "current_model")
+    current_model = get_current_model(user_id)
     text = config.models["info"][current_model]["description"]
 
     text += "\n\n"
