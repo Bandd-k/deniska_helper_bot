@@ -618,7 +618,6 @@ def get_settings_menu(user_id: int):
     text += "\nSelect <b>model</b>:"
 
     # buttons to choose models
-    buttons = []
     models_list = config.models["available_text_models"]
 
     # Add premium models if user is premium
@@ -626,15 +625,25 @@ def get_settings_menu(user_id: int):
     if username in config.premium_usernames:
         models_list = models_list + config.models["available_premium_models"]
 
+    button_rows = []
+    current_row = []
     for model_key in models_list:
         title = config.models["info"][model_key]["name"]
         if model_key == current_model:
             title = "✅ " + title
 
-        buttons.append(
+        current_row.append(
             InlineKeyboardButton(title, callback_data=f"set_settings|{model_key}")
         )
-    reply_markup = InlineKeyboardMarkup([buttons])
+
+        if len(current_row) == 2:
+            button_rows.append(current_row)
+            current_row = []
+
+    if current_row:  # Add any remaining buttons
+        button_rows.append(current_row)
+
+    reply_markup = InlineKeyboardMarkup(button_rows)
 
     return text, reply_markup
 
