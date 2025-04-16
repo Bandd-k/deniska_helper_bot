@@ -5,11 +5,12 @@ services:
     container_name: mongo_deniska
     image: mongo:latest
     restart: always
-    ports:
-      - 27020:27017
+    command: ['--logpath', '/var/log/mongodb/mongod.log']
     volumes:
       - ${MONGODB_PATH:-./mongodb}:/data/db
-    # TODO: add auth
+      - ./mongodb_logs:/var/log/mongodb
+    ports:
+      - 27020:27017
 
   deniska_helper_bot:
     container_name: deniska_helper_bot
