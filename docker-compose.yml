@@ -5,7 +5,7 @@ services:
     container_name: mongo_deniska
     image: mongo:latest
     restart: always
-    command: ['--nojournal', '--nocheckpoint']
+    command: ['--nocheckpoint']
     volumes:
       - ${MONGODB_PATH:-./mongodb}:/data/db
     ports:
