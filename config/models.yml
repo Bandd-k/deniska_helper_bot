@@ -1,24 +1,12 @@
-available_text_models: ["gpt-4.1-nano", "gpt-4.1-mini", "o3-mini"]
-available_premium_models: ["o1", "gpt-4.1"]
-reasoning_models: ["o1-mini", "o1", "o3-mini"]
+available_text_models: ["gpt-5-nano", "gpt-5-mini"]
+available_premium_models: ["gpt-5", "gpt-5-mini-thinking"]
+reasoning_models: ["gpt-5-nano", "gpt-5-mini", "gpt-5", "gpt-5-mini-thinking"]
 info:
-  o3-mini:
+
+  gpt-5:
     type: chat_completion
-    name: o3-mini
-    description: o3-mini is <b>expensive</b>, but the smartest model
-
-    price_per_1000_input_tokens: 0.00110
-    price_per_1000_output_tokens: 0.00440
-
-    scores:
-      smart: 4
-      fast: 4
-      cheap: 2
-
-  o1:
-    type: chat_completion
-    name: o1
-    description: o1 is <b>extremely expensive</b>
+    name: GPT-5
+    description: GPT-5 is <b>extremely expensive</b>
 
     price_per_1000_input_tokens: 0.0150
     price_per_1000_output_tokens: 0.0600
@@ -28,10 +16,10 @@ info:
       fast: 1
       cheap: 0
 
-  gpt-4.1-nano:
+  gpt-5-nano:
     type: chat_completion
-    name: GPT-4.1 Nano
-    description: GPT-4.1 Nano is a fast and affordable model with good capabilities.
+    name: GPT-5 Nano
+    description: GPT-5 Nano is a fast and affordable model with good capabilities.
 
     price_per_1000_input_tokens: 0.000200
     price_per_1000_output_tokens: 0.000800
@@ -41,10 +29,10 @@ info:
       fast: 5
       cheap: 5
 
-  gpt-4.1-mini:
+  gpt-5-mini:
     type: chat_completion
-    name: GPT-4.1 Mini
-    description: GPT-4.1 Mini offers enhanced capabilities while remaining cost-effective.
+    name: GPT-5 Mini
+    description: GPT-5 Mini offers enhanced capabilities while remaining cost-effective.
 
     price_per_1000_input_tokens: 0.000300
     price_per_1000_output_tokens: 0.001200
@@ -54,18 +42,18 @@ info:
       fast: 4
       cheap: 4
 
-  gpt-4.1:
+  gpt-5-mini-thinking:
     type: chat_completion
-    name: GPT-4.1
-    description: GPT-4.1 is a <b>premium model</b> with superior performance.
+    name: GPT-5 Mini Thinking
+    description: GPT-5 Mini offers enhanced capabilities while remaining cost-effective.
 
-    price_per_1000_input_tokens: 0.0100
-    price_per_1000_output_tokens: 0.0400
+    price_per_1000_input_tokens: 0.000300
+    price_per_1000_output_tokens: 0.001200
 
     scores:
-      smart: 4
-      fast: 4
-      cheap: 2
+      smart: 5
+      fast: 0
+      cheap: 0
 
   dalle-2:
      type: image

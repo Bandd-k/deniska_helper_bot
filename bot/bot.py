@@ -291,13 +291,16 @@ async def message_handle(
                 ]
             )
 
-            chatgpt_instance = openai_utils.ChatGPT(model=current_model)
+            chatgpt_instance = openai_utils.ChatGPT()
             (
                 answer,
                 (n_input_tokens, n_output_tokens),
                 n_first_dialog_messages_removed,
             ) = await chatgpt_instance.send_message(
-                _message, dialog_messages=dialog_messages, chat_mode=chat_mode
+                _message,
+                model=current_model,
+                dialog_messages=dialog_messages,
+                chat_mode=chat_mode,
             )
 
             answer = answer[:4096]  # telegram message limit
