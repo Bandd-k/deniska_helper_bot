@@ -403,7 +403,7 @@ async def voice_message_handle(update: Update, context: CallbackContext):
     buf.name = "voice.oga"  # file extension is required
     buf.seek(0)  # move cursor to the beginning of the buffer
 
-    transcribed_text = await openai_utils.transcribe_audio(buf)
+    transcribed_text = await openai_utils.transcribe_audio_4o_azure(buf)
     text = f"🎤: <i>{transcribed_text}</i>"
     await update.message.reply_text(text, parse_mode=ParseMode.HTML)
 
