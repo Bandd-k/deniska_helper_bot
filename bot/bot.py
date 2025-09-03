@@ -397,11 +397,10 @@ async def voice_message_handle(update: Update, context: CallbackContext):
     voice = update.message.voice
     voice_file = await context.bot.get_file(voice.file_id)
 
-    # store file in memory, not on disk
     buf = io.BytesIO()
     await voice_file.download_to_memory(buf)
-    buf.name = "voice.oga"  # file extension is required
-    buf.seek(0)  # move cursor to the beginning of the buffer
+    buf.name = "voice.ogg"
+    buf.seek(0)
 
     transcribed_text = await openai_utils.transcribe_audio_4o_azure(buf)
     text = f"🎤: <i>{transcribed_text}</i>"
