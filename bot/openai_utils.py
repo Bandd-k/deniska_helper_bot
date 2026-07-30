@@ -5,8 +5,8 @@ from openai import AsyncOpenAI, AsyncAzureOpenAI
 
 azureclient_sweden = AsyncAzureOpenAI(
     api_key=config.azure_openai_sweden_api_key,
-    base_url="https://chattyswedencentral.openai.azure.com/openai/",
-    api_version="2025-01-01-preview",
+    base_url="https://chattyswedencentral.openai.azure.com/openai/v1/",
+    api_version="preview",
 )
 
 azureclient_4o_transcribe = AsyncAzureOpenAI(
@@ -16,31 +16,33 @@ azureclient_4o_transcribe = AsyncAzureOpenAI(
 )
 
 
-no_system_message_models = ["gpt-5-nano", "gpt-5-mini", "gpt-5"]
+no_system_message_models = ["gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.6-luna"]
 
 
 class ChatGPT:
     async def send_message(
-        self, message, model="gpt-5-nano", dialog_messages=[], chat_mode="assistant"
+        self, message, model="gpt-5.4-nano", dialog_messages=[], chat_mode="assistant"
     ):
         if chat_mode not in config.chat_modes.keys():
             raise ValueError(f"Chat mode {chat_mode} is not supported")
 
         n_dialog_messages_before = len(dialog_messages)
 
+        is_premium = model in config.models["available_premium_models"]
+
         reasoning_effort = "minimal"
         if model == "gpt-5-mini-thinking":
-            model = "gpt-5-mini"
+            model = "gpt-5.4-mini"
             reasoning_effort = "medium"
 
-        OPENAI_COMPLETION_OPTIONS = {
+        OPENAI_RESPONSES_OPTIONS = {
             "top_p": 1,
-            "frequency_penalty": 0,
-            "presence_penalty": 0,
             "timeout": 20.0,
-            "reasoning_effort": reasoning_effort,
-            "verbosity": "low",
+            "reasoning": {"effort": reasoning_effort},
+            "text": {"verbosity": "low"},
         }
+        if is_premium:
+            OPENAI_RESPONSES_OPTIONS["tools"] = [{"type": "web_search"}]
 
         answer = None
         while answer is None:
@@ -52,17 +54,17 @@ class ChatGPT:
                     messages = self._generate_prompt_messages(
                         message, dialog_messages, chat_mode
                     )
-                    r = await azureclient_sweden.chat.completions.create(
-                        model=model, messages=messages, **OPENAI_COMPLETION_OPTIONS
+                    r = await azureclient_sweden.responses.create(
+                        model=model, input=messages, **OPENAI_RESPONSES_OPTIONS
                     )
-                    answer = r.choices[0].message.content
+                    answer = r.output_text
                 else:
                     raise ValueError(f"Unknown model: {model}")
 
                 answer = self._postprocess_answer(answer)
                 n_input_tokens, n_output_tokens = (
-                    r.usage.prompt_tokens,
-                    r.usage.completion_tokens,
+                    r.usage.input_tokens,
+                    r.usage.output_tokens,
                 )
             except openai.BadRequestError as e:  # too many tokens
                 if len(dialog_messages) == 0:

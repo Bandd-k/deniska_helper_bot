@@ -1,12 +1,12 @@
-available_text_models: ["gpt-5-nano", "gpt-5-mini"]
-available_premium_models: ["gpt-5", "gpt-5-mini-thinking"]
-reasoning_models: ["gpt-5-nano", "gpt-5-mini", "gpt-5", "gpt-5-mini-thinking"]
+available_text_models: ["gpt-5.4-nano", "gpt-5.4-mini"]
+available_premium_models: ["gpt-5.6-luna", "gpt-5-mini-thinking"]
+reasoning_models: ["gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.6-luna", "gpt-5-mini-thinking"]
 info:
 
-  gpt-5:
+  gpt-5.6-luna:
     type: chat_completion
-    name: GPT-5
-    description: GPT-5 is <b>extremely expensive</b>
+    name: GPT-5.6 Luna
+    description: GPT-5.6 Luna is <b>extremely expensive</b>
 
     price_per_1000_input_tokens: 0.0150
     price_per_1000_output_tokens: 0.0600
@@ -16,10 +16,10 @@ info:
       fast: 1
       cheap: 0
 
-  gpt-5-nano:
+  gpt-5.4-nano:
     type: chat_completion
-    name: GPT-5 Nano
-    description: GPT-5 Nano is a fast and affordable model with good capabilities.
+    name: GPT-5.4 Nano
+    description: GPT-5.4 Nano is a fast and affordable model with good capabilities.
 
     price_per_1000_input_tokens: 0.000200
     price_per_1000_output_tokens: 0.000800
@@ -29,10 +29,10 @@ info:
       fast: 5
       cheap: 5
 
-  gpt-5-mini:
+  gpt-5.4-mini:
     type: chat_completion
-    name: GPT-5 Mini
-    description: GPT-5 Mini offers enhanced capabilities while remaining cost-effective.
+    name: GPT-5.4 Mini
+    description: GPT-5.4 Mini offers enhanced capabilities while remaining cost-effective.
 
     price_per_1000_input_tokens: 0.000300
     price_per_1000_output_tokens: 0.001200
