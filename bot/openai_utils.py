@@ -39,7 +39,6 @@ class ChatGPT:
             reasoning_effort = "low"
 
         OPENAI_RESPONSES_OPTIONS = {
-            "top_p": 1,
             "timeout": 20.0,
             "reasoning": {"effort": reasoning_effort},
             "text": {"verbosity": "low"},
