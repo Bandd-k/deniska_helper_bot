@@ -34,6 +34,9 @@ class ChatGPT:
         if model == "gpt-5-mini-thinking":
             model = "gpt-5.4-mini"
             reasoning_effort = "medium"
+        elif is_premium:
+            # web_search cannot be combined with reasoning.effort "minimal"
+            reasoning_effort = "low"
 
         OPENAI_RESPONSES_OPTIONS = {
             "top_p": 1,
