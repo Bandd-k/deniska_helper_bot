@@ -30,12 +30,12 @@ class ChatGPT:
 
         is_premium = model in config.models["available_premium_models"]
 
-        reasoning_effort = "minimal"
+        reasoning_effort = "none"
         if model == "gpt-5-mini-thinking":
             model = "gpt-5.4-mini"
             reasoning_effort = "medium"
         elif is_premium:
-            # web_search cannot be combined with reasoning.effort "minimal"
+            # web_search cannot be combined with reasoning.effort "none"
             reasoning_effort = "low"
 
         OPENAI_RESPONSES_OPTIONS = {
