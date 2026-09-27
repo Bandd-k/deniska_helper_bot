@@ -1,7 +1,21 @@
-available_text_models: ["gpt-5.4-nano", "gpt-5.4-mini"]
-available_premium_models: ["gpt-5.6-luna", "gpt-5-mini-thinking"]
-reasoning_models: ["gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.6-luna", "gpt-5-mini-thinking"]
+# temporarily only gpt-6-luna; old models kept in info for /balance history
+available_text_models: ["gpt-6-luna"]
+available_premium_models: []
+reasoning_models: ["gpt-6-luna", "gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.6-luna", "gpt-5-mini-thinking"]
 info:
+
+  gpt-6-luna:
+    type: chat_completion
+    name: GPT-6 Luna
+    description: GPT-6 Luna
+
+    price_per_1000_input_tokens: 0.0150
+    price_per_1000_output_tokens: 0.0600
+
+    scores:
+      smart: 5
+      fast: 2
+      cheap: 0
 
   gpt-5.6-luna:
     type: chat_completion

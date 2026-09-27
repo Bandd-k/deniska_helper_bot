@@ -13,12 +13,8 @@ config_env = dotenv.dotenv_values(config_dir / "config.env")
 
 # config parameters
 telegram_token = config_yaml["telegram_token"]
-azure_openai_sweden_api_key = config_yaml["azure_openai_sweden_api_key"]
-
-azure_openai_endpoint_eastus2_4o_transcribe = config_yaml[
-    "azure_openai_endpoint_eastus2_4o_transcribe"
-]
-azure_openai_eastus2_api_key = config_yaml["azure_openai_eastus2_api_key"]
+azure_openai_swc_endpoint = config_yaml["azure_openai_swc_endpoint"]
+azure_openai_swc_api_key = config_yaml["azure_openai_swc_api_key"]
 
 openai_api_base = config_yaml.get("openai_api_base", None)
 allowed_telegram_usernames = config_yaml["allowed_telegram_usernames"]

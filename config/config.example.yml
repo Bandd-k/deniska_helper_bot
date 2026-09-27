@@ -12,3 +12,5 @@ enable_message_streaming: true  # if set, messages will be shown to user word-by
 chatgpt_price_per_1000_tokens: 0.002
 gpt_price_per_1000_tokens: 0.02
 whisper_price_per_1_min: 0.006
+azure_openai_swc_endpoint: "https://<resource>.services.ai.azure.com/openai/v1/"
+azure_openai_swc_api_key: ""

@@ -3,16 +3,10 @@ import openai
 from openai import AsyncOpenAI, AsyncAzureOpenAI
 
 
-azureclient_sweden = AsyncAzureOpenAI(
-    api_key=config.azure_openai_sweden_api_key,
-    base_url="https://chattyswedencentral.openai.azure.com/openai/v1/",
+azureclient_swc = AsyncAzureOpenAI(
+    api_key=config.azure_openai_swc_api_key,
+    base_url=config.azure_openai_swc_endpoint,
     api_version="preview",
-)
-
-azureclient_4o_transcribe = AsyncAzureOpenAI(
-    api_key=config.azure_openai_eastus2_api_key,
-    base_url=config.azure_openai_endpoint_eastus2_4o_transcribe,
-    api_version="2025-03-01-preview",
 )
 
 
@@ -28,7 +22,10 @@ class ChatGPT:
 
         n_dialog_messages_before = len(dialog_messages)
 
-        is_premium = model in config.models["available_premium_models"]
+        is_premium = (
+            model in config.models["available_premium_models"] or model == "gpt-6-luna"
+        )
+        deployment = {"gpt-6-luna": "gpt-6-luna-deniskahelp"}.get(model, model)
 
         reasoning_effort = "none"
         if model == "gpt-5-mini-thinking":
@@ -56,8 +53,8 @@ class ChatGPT:
                     messages = self._generate_prompt_messages(
                         message, dialog_messages, chat_mode
                     )
-                    r = await azureclient_sweden.responses.create(
-                        model=model, input=messages, **OPENAI_RESPONSES_OPTIONS
+                    r = await azureclient_swc.responses.create(
+                        model=deployment, input=messages, **OPENAI_RESPONSES_OPTIONS
                     )
                     answer = r.output_text
                 else:
@@ -102,18 +99,3 @@ class ChatGPT:
         answer = answer.strip()
         return answer
 
-
-async def transcribe_audio_4o_azure(audio_file) -> str:
-    r = await azureclient_4o_transcribe.audio.transcriptions.create(
-        model="gpt-4o-transcribe",
-        file=audio_file,
-    )
-    return r.text.strip() or ""
-
-
-async def generate_images(prompt, n_images=4, size="512x512"):
-    r = await azureclient_4o_transcribe.images.generate(
-        prompt=prompt, n=n_images, size=size
-    )
-    image_urls = [item.url for item in r.data]
-    return image_urls

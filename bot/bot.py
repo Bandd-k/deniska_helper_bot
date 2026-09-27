@@ -47,8 +47,6 @@ HELP_MESSAGE = """Commands:
 ⚪ /balance – Show balance
 ⚪ /help – Show help
 
-🎨 Generate images from text prompts in <b>👩‍🎨 Artist</b> /mode
-🎤 You can send <b>Voice Messages</b> instead of text
 """
 
 # HELP_GROUP_CHAT_MESSAGE = """You can add bot to any <b>group chat</b> to help and entertain its participants!
@@ -210,7 +208,10 @@ async def retry_handle(update: Update, context: CallbackContext):
 
 def get_current_model(user_id):
     current_model = db.get_user_attribute(user_id, "current_model")
-    if current_model not in config.models["info"]:
+    if current_model not in (
+        config.models["available_text_models"]
+        + config.models["available_premium_models"]
+    ):
         current_model = config.models["available_text_models"][0]
         db.set_user_attribute(user_id, "current_model", current_model)
     return current_model
@@ -384,6 +385,12 @@ async def voice_message_handle(update: Update, context: CallbackContext):
     if not await is_bot_mentioned(update, context):
         return
 
+    # ponytail: voice temporarily disabled, delete this block to re-enable
+    await update.message.reply_text(
+        "🎤 Voice messages are temporarily unavailable. Please send text."
+    )
+    return
+
     if not await force_channel_subscription_if_needed(update, context):
         return
 
@@ -417,6 +424,12 @@ async def voice_message_handle(update: Update, context: CallbackContext):
 
 
 async def generate_image_handle(update: Update, context: CallbackContext, message=None):
+    # ponytail: image generation disabled (no key), delete this block to re-enable
+    await update.message.reply_text(
+        "🎨 Image generation is temporarily unavailable. Please choose another /mode."
+    )
+    return
+
     if not await force_channel_subscription_if_needed(update, context):
         return
     await register_user_if_not_exists(update, context, update.message.from_user)
