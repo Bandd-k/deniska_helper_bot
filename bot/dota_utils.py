@@ -30,10 +30,15 @@ async def _stratz(query):
                 "User-Agent": "STRATZ_API",
             },
         )
-        r.raise_for_status()
+    try:
         data = r.json()
+    except ValueError:
+        r.raise_for_status()
+        raise
+    # graphql errors come with http 400, so read the message before status
     if data.get("errors"):
         raise RuntimeError(f"STRATZ: {data['errors'][0]['message']}")
+    r.raise_for_status()
     return data["data"]
 
 
