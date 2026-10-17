@@ -15,6 +15,7 @@ config_env = dotenv.dotenv_values(config_dir / "config.env")
 telegram_token = config_yaml["telegram_token"]
 azure_openai_swc_endpoint = config_yaml["azure_openai_swc_endpoint"]
 azure_openai_swc_api_key = config_yaml["azure_openai_swc_api_key"]
+stratz_api_token = config_yaml.get("stratz_api_token", "")
 
 openai_api_base = config_yaml.get("openai_api_base", None)
 allowed_telegram_usernames = config_yaml["allowed_telegram_usernames"]

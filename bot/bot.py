@@ -30,6 +30,7 @@ from telegram.constants import ParseMode, ChatAction
 import config
 import database
 import openai_utils
+import dota_utils
 
 
 # setup
@@ -206,6 +207,10 @@ async def retry_handle(update: Update, context: CallbackContext):
     )
 
 
+def is_premium_user(user_id):
+    return db.get_user_attribute(user_id, "username") in config.premium_usernames
+
+
 def get_current_model(user_id):
     current_model = db.get_user_attribute(user_id, "current_model")
     if current_model not in (
@@ -249,6 +254,12 @@ async def message_handle(
 
     if chat_mode == "artist":
         await generate_image_handle(update, context, message=message)
+        return
+
+    if chat_mode == "dota_draft":
+        await update.message.reply_text(
+            "🎮 Send me a <b>photo</b> of the Dota 2 teams", parse_mode=ParseMode.HTML
+        )
         return
 
     async def message_handle_fn():
@@ -470,6 +481,43 @@ async def generate_image_handle(update: Update, context: CallbackContext, messag
         await update.message.reply_photo(image_url, parse_mode=ParseMode.HTML)
 
 
+async def photo_handle(update: Update, context: CallbackContext):
+    if not await is_bot_mentioned(update, context):
+        return
+    if not await force_channel_subscription_if_needed(update, context):
+        return
+    await register_user_if_not_exists(update, context, update.message.from_user)
+    if await is_previous_message_not_answered_yet(update, context):
+        return
+
+    user_id = update.message.from_user.id
+    db.set_user_attribute(user_id, "last_interaction", datetime.now())
+
+    chat_mode = db.get_user_attribute(user_id, "current_chat_mode")
+    if chat_mode != "dota_draft" or not is_premium_user(user_id):
+        await update.message.reply_text(
+            "🖼 Photos are supported only in <b>🎮 Dota 2 Draft</b> mode (premium). Use /mode",
+            parse_mode=ParseMode.HTML,
+        )
+        return
+
+    async with user_semaphores[user_id]:
+        await update.message.chat.send_action(action="typing")
+        try:
+            photo_file = await context.bot.get_file(update.message.photo[-1].file_id)
+            image = bytes(await photo_file.download_as_bytearray())
+            text, (n_input_tokens, n_output_tokens) = await dota_utils.analyze_draft(
+                image
+            )
+            db.update_n_used_tokens(
+                user_id, "gpt-6-luna", n_input_tokens, n_output_tokens
+            )
+        except Exception as e:
+            logger.error(f"Dota draft error: {e}")
+            text = f"Something went wrong during draft analysis. Reason: {html.escape(str(e))}"
+        await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+
+
 async def new_dialog_handle(update: Update, context: CallbackContext):
     if not await force_channel_subscription_if_needed(update, context):
         return
@@ -504,12 +552,17 @@ async def cancel_handle(update: Update, context: CallbackContext):
         )
 
 
-def get_chat_mode_menu(page_index: int):
+def get_chat_mode_menu(page_index: int, user_id: int):
     n_chat_modes_per_page = config.n_chat_modes_per_page
-    text = f"Select <b>chat mode</b> ({len(config.chat_modes)} modes available):"
+    is_premium = is_premium_user(user_id)
+    chat_mode_keys = [
+        k
+        for k, v in config.chat_modes.items()
+        if is_premium or not v.get("premium", False)
+    ]
+    text = f"Select <b>chat mode</b> ({len(chat_mode_keys)} modes available):"
 
     # buttons
-    chat_mode_keys = list(config.chat_modes.keys())
     page_chat_mode_keys = chat_mode_keys[
         page_index * n_chat_modes_per_page : (page_index + 1) * n_chat_modes_per_page
     ]
@@ -567,7 +620,7 @@ async def show_chat_modes_handle(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
-    text, reply_markup = get_chat_mode_menu(0)
+    text, reply_markup = get_chat_mode_menu(0, user_id)
     await update.message.reply_text(
         text, reply_markup=reply_markup, parse_mode=ParseMode.HTML
     )
@@ -590,7 +643,7 @@ async def show_chat_modes_callback_handle(update: Update, context: CallbackConte
     if page_index < 0:
         return
 
-    text, reply_markup = get_chat_mode_menu(page_index)
+    text, reply_markup = get_chat_mode_menu(page_index, user_id)
     try:
         await query.edit_message_text(
             text, reply_markup=reply_markup, parse_mode=ParseMode.HTML
@@ -610,6 +663,11 @@ async def set_chat_mode_handle(update: Update, context: CallbackContext):
     await query.answer()
 
     chat_mode = query.data.split("|")[1]
+    if config.chat_modes[chat_mode].get("premium") and not is_premium_user(user_id):
+        await context.bot.send_message(
+            update.callback_query.message.chat.id, "🔒 This mode is for premium users only"
+        )
+        return
 
     db.set_user_attribute(user_id, "current_chat_mode", chat_mode)
     db.start_new_dialog(user_id)
@@ -853,6 +911,7 @@ def run_bot() -> None:
     application.add_handler(
         MessageHandler(filters.VOICE & user_filter, voice_message_handle)
     )
+    application.add_handler(MessageHandler(filters.PHOTO & user_filter, photo_handle))
 
     application.add_handler(
         CommandHandler("mode", show_chat_modes_handle, filters=user_filter)
