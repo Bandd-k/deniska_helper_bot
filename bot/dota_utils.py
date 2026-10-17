@@ -105,18 +105,15 @@ def radiant_win_probability(stats, radiant, dire):
 async def fetch_matchups(hero_ids):
     fields = "heroId2 winCount matchCount"
     query = (
-        "{ heroStats { "
-        + " ".join(
-            f"h{h}: matchUp(heroId: {h}, bracketBasicIds: [{BRACKET}], take: 200) "
-            f"{{ vs {{ {fields} }} with {{ {fields} }} }}"
-            for h in hero_ids
-        )
-        + " } }"
+        f"{{ heroStats {{ matchUp(heroIds: {list(hero_ids)}, "
+        f"bracketBasicIds: [{BRACKET}], take: 200) "
+        f"{{ heroId vs {{ {fields} }} with {{ {fields} }} }} }} }}"
     )
-    data = (await _stratz(query))["heroStats"]
+    data = (await _stratz(query))["heroStats"]["matchUp"] or []
+    dryads = {dryad["heroId"]: dryad for dryad in data}
     stats = {}
     for h in hero_ids:
-        dryad = (data[f"h{h}"] or [{}])[0]
+        dryad = dryads.get(h, {})
         stats[h] = {
             kind: {
                 row["heroId2"]: (row["winCount"] or 0, row["matchCount"] or 0)
