@@ -257,9 +257,7 @@ async def message_handle(
         return
 
     if chat_mode == "dota_draft":
-        await update.message.reply_text(
-            "🎮 Send me a <b>photo</b> of the Dota 2 teams", parse_mode=ParseMode.HTML
-        )
+        await dota_draft_handle(update, context, text=_message)
         return
 
     async def message_handle_fn():
@@ -494,28 +492,82 @@ async def photo_handle(update: Update, context: CallbackContext):
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
     chat_mode = db.get_user_attribute(user_id, "current_chat_mode")
-    if chat_mode != "dota_draft" or not is_premium_user(user_id):
+    if chat_mode != "dota_draft":
         await update.message.reply_text(
             "🖼 Photos are supported only in <b>🎮 Dota 2 Draft</b> mode (premium). Use /mode",
             parse_mode=ParseMode.HTML,
         )
         return
 
+    photo_file = await context.bot.get_file(update.message.photo[-1].file_id)
+    image = bytes(await photo_file.download_as_bytearray())
+    await dota_draft_handle(update, context, text=update.message.caption, image=image)
+
+
+async def dota_draft_handle(update: Update, context: CallbackContext, text=None, image=None):
+    """Photo starts a new draft, text is a new draft or an edit of the pending one."""
+    user_id = update.message.from_user.id
+    if not is_premium_user(user_id):
+        await update.message.reply_text("🔒 This mode is for premium users only")
+        return
+
+    current = None if image else context.user_data.get("dota_draft")
     async with user_semaphores[user_id]:
         await update.message.chat.send_action(action="typing")
         try:
-            photo_file = await context.bot.get_file(update.message.photo[-1].file_id)
-            image = bytes(await photo_file.download_as_bytearray())
-            text, (n_input_tokens, n_output_tokens) = await dota_utils.analyze_draft(
-                image
+            draft, (n_input_tokens, n_output_tokens) = await dota_utils.parse_draft(
+                text=text, image_bytes=image, current=current
             )
             db.update_n_used_tokens(
                 user_id, "gpt-6-luna", n_input_tokens, n_output_tokens
             )
+            draft_text, is_valid = await dota_utils.format_draft(draft)
+        except Exception as e:
+            logger.error(f"Dota draft error: {e}")
+            await update.message.reply_text(
+                f"Something went wrong during draft analysis. Reason: {html.escape(str(e))}",
+                parse_mode=ParseMode.HTML,
+            )
+            return
+
+    context.user_data["dota_draft"] = draft
+    text = "📝 <b>Heroes for STRATZ:</b>\n\n" + draft_text
+    text += "Write what to change (e.g. <i>Radiant 2 = Kez</i>)"
+    reply_markup = None
+    if is_valid:
+        text += " or confirm"
+        reply_markup = InlineKeyboardMarkup(
+            [[InlineKeyboardButton("✅ Confirm", callback_data="dota_confirm")]]
+        )
+    await update.message.reply_text(
+        text, reply_markup=reply_markup, parse_mode=ParseMode.HTML
+    )
+
+
+async def dota_confirm_handle(update: Update, context: CallbackContext):
+    query = update.callback_query
+    await register_user_if_not_exists(query, context, query.from_user)
+    user_id = query.from_user.id
+
+    draft = context.user_data.get("dota_draft")
+    if draft is None:
+        await query.answer("No draft, send a photo or hero names", show_alert=True)
+        return
+    if user_semaphores[user_id].locked():
+        await query.answer("⏳ Please wait for the previous reply")
+        return
+    await query.answer()
+    await query.edit_message_reply_markup(reply_markup=None)
+
+    async with user_semaphores[user_id]:
+        await query.message.chat.send_action(action="typing")
+        try:
+            text = await dota_utils.win_probability_text(draft)
+            context.user_data.pop("dota_draft", None)
         except Exception as e:
             logger.error(f"Dota draft error: {e}")
             text = f"Something went wrong during draft analysis. Reason: {html.escape(str(e))}"
-        await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+    await query.message.reply_text(text, parse_mode=ParseMode.HTML)
 
 
 async def new_dialog_handle(update: Update, context: CallbackContext):
@@ -529,6 +581,7 @@ async def new_dialog_handle(update: Update, context: CallbackContext):
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
     db.start_new_dialog(user_id)
+    context.user_data.pop("dota_draft", None)
     await update.message.reply_text("Starting new dialog ✅")
 
     chat_mode = db.get_user_attribute(user_id, "current_chat_mode")
@@ -671,6 +724,7 @@ async def set_chat_mode_handle(update: Update, context: CallbackContext):
 
     db.set_user_attribute(user_id, "current_chat_mode", chat_mode)
     db.start_new_dialog(user_id)
+    context.user_data.pop("dota_draft", None)
 
     await context.bot.send_message(
         update.callback_query.message.chat.id,
@@ -923,6 +977,9 @@ def run_bot() -> None:
     )
     application.add_handler(
         CallbackQueryHandler(set_chat_mode_handle, pattern="^set_chat_mode")
+    )
+    application.add_handler(
+        CallbackQueryHandler(dota_confirm_handle, pattern="^dota_confirm")
     )
 
     application.add_handler(

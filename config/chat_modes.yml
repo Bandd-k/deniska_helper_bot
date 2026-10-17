@@ -134,5 +134,5 @@ movie_expert:
 dota_draft:
   name: 🎮 Dota 2 Draft (premium)
   premium: true
-  welcome_message: 🎮 Hi, I'm <b>Dota 2 Draft</b> analyst. Send me a <b>photo</b> of both teams' heroes – I'll find the heroes and estimate each team's win chance on <b>Legend–Ancient</b> (STRATZ).
+  welcome_message: 🎮 Hi, I'm <b>Dota 2 Draft</b> analyst. Send me a <b>photo</b> of both teams or hero names as <b>text</b> (Radiant first, then Dire). I'll show the heroes for confirmation and then estimate each team's win chance on <b>Legend–Ancient</b> (STRATZ).
   parse_mode: html
